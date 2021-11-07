@@ -54,16 +54,16 @@ class Education {
         if ($this->end_date) {
 
             $query = $this->conn->prepare('INSERT INTO education_portfolio_2
-                (course, school, education_start_date, education_end_date, updated_by)
-                VALUES (?, ?, ?, ?, ?)');
+                (course, school, education_start_date, education_end_date, 
+                education_updated_by) VALUES (?, ?, ?, ?, ?)');
             $query->bind_param('sssss', $this->course, $this->school, $this->start_date,
                 $this->end_date, $this->updated_by);
             
         } else {
 
             $query = $this->conn->prepare('INSERT INTO education_portfolio_2
-                (course, school, education_start_date, updated_by)
-                VALUES (?, ?, ?, ?)');
+                (course, school, education_start_date, 
+                education_updated_by) VALUES (?, ?, ?, ?)');
             $query->bind_param('ssss', $this->course, $this->school, $this->start_date,
                 $this->updated_by);
         }
@@ -81,5 +81,45 @@ class Education {
                 $this->conn->connect_error;
             return false; 
         }
+    }
+
+    // Uppdaterar utbildningar
+    public function updateCourse(): bool {
+
+        $user = new User();
+        $this->updated_by = $user->username;
+        $query = '';
+        $this->updated = date('Y-m-d H:i:s');
+
+        if ($this->end_date) {
+
+            $query = $this->conn->prepare('UPDATE education_portfolio_2 SET course = ?, 
+            school = ?, education_start_date = ?, education_end_date = ?, 
+            education_updated = ?, education_updated_by = ? WHERE education_id = ?');
+            $query->bind_param('ssssssi', $this->course, $this->school, $this->start_date,
+            $this->end_date, $this->updated, $this->updated_by, $this->id);
+        
+        } else {
+
+            $query = $this->conn->prepare('UPDATE education_portfolio_2 SET course = ?, 
+            school = ?, education_start_date = ?, education_updated = ?, 
+            education_updated_by = ? WHERE education_id = ?');
+            $query->bind_param('sssssi', $this->course, $this->school, $this->start_date,
+            $this->updated, $this->updated_by, $this->id);
+        }
+
+        $query->execute();
+
+        if (!$this->conn->connect_error) {
+
+            $this->confirm = 'Utbildningen har uppdaterats.';
+            return true;
+        
+        } else {
+            
+            $this->error = 'Det gick inte att uppdatera utbildningen: ' . 
+                $this->conn->connect_error;
+            return false;
+        }    
     }
 }

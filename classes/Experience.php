@@ -82,4 +82,44 @@ class Experience {
             return false; 
         }
     }
+
+    // Uppdaterar jobb
+    public function updateJob(): bool {
+
+        $user = new User();
+        $this->updated_by = $user->username;
+        $query = '';
+        $this->updated = date('Y-m-d H:i:s');
+
+        if ($this->end_date) {
+
+            $query = $this->conn->prepare('UPDATE experience_portfolio_2 SET job = ?,
+                employer = ?, job_start_date = ?, job_end_date = ?, job_updated = ?,
+                job_updated_by = ? WHERE job_id = ?');
+            $query->bind_param('ssssssi', $this->employment, $this->employer, $this->start_date, 
+                $this->end_date, $this->updated, $this->updated_by, $this->id);
+        
+        } else {
+
+            $query = $this->conn->prepare('UPDATE experience_portfolio_2 SET job = ?,
+                employer = ?, job_start_date = ?, job_updated = ?, job_updated_by = ?
+                WHERE job_id = ?');
+            $query->bind_param('sssssi', $this->employment, $this->employer, $this->start_date, 
+                $this->updated, $this->updated_by, $this->id);
+        }
+
+        $query->execute();
+
+        if (!$this->conn->connect_error) {
+
+            $this->confirm = 'Jobbet har uppdaterats.';
+            return true;
+        
+        } else {
+
+            $this->error = 'Det gick inte att uppdatera jobbet: ' .
+                $this->conn->connect_error;
+            return false;
+        }
+    }
 }
