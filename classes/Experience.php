@@ -1,25 +1,26 @@
 <?php
 // Inkluderar databasklassen
 include_once 'Database.php';
+include_once 'User.php';
 
-// Klass som hanterar utbildningar
-class Education {
+// Klass som hanterar jobb
+class Experience {
 
     // Properties
     public $id;
-    public $course;
-    public $school;
+    public $employment;
+    public $employer;
     public $start_date;
     public $end_date;
     public $updated;
     public $updated_by;
-    public $educationArr = [];
-    public $education = [];
+    public $jobArr = [];
+    public $job = [];
     public $error;
     public $confirm;
     public $conn;
 
-    // Metoder
+    // Metoder 
     // Konstruerare
     public function __construct() {
 
@@ -30,22 +31,22 @@ class Education {
             $this->error = $database->error;
         }
 
-        $query = 'SELECT * FROM education_portfolio_2';
+        $query = 'SELECT * FROM experience_portfolio_2';
         $result = $this->conn->query($query);
 
         if($result->num_rows > 0) {
 
             while($row = $result->fetch_assoc()) {
-                array_push($this->educationArr, $row);
+                array_push($this->jobArr, $row);
             }
-
+        
         } else {
-            $this->error = 'Inga utbildningar hittades.';
+            $this->error = 'Inga jobb hittades.';
         }
     }
 
-    // Lägger till utbildningar
-    public function addCourse(): bool {
+    // Lägger till jobb
+    public function addJob(): bool {
 
         $user = new User();
         $this->updated_by = $user->username;
@@ -53,18 +54,17 @@ class Education {
 
         if ($this->end_date) {
 
-            $query = $this->conn->prepare('INSERT INTO education_portfolio_2
-                (course, school, education_start_date, education_end_date, updated_by)
+            $query = $this->conn->prepare('INSERT INTO experience_portfolio_2
+                (job, employer, job_start_date, job_end_date, updated_by)
                 VALUES (?, ?, ?, ?, ?)');
-            $query->bind_param('sssss', $this->course, $this->school, $this->start_date,
+            $query->bind_param('sssss', $this->employment, $this->employer, $this->start_date,
                 $this->end_date, $this->updated_by);
             
         } else {
 
-            $query = $this->conn->prepare('INSERT INTO education_portfolio_2
-                (course, school, education_start_date, updated_by)
-                VALUES (?, ?, ?, ?)');
-            $query->bind_param('ssss', $this->course, $this->school, $this->start_date,
+            $query = $this->conn->prepare('INSERT INTO experience_portfolio_2
+                (job, employer, job_start_date, updated_by) VALUES (?, ?, ?, ?)');
+            $query->bind_param('ssss', $this->employment, $this->employer, $this->start_date,
                 $this->updated_by);
         }
 
@@ -72,12 +72,12 @@ class Education {
 
         if (!$this->conn->connect_error) {
             
-            $this->confirm = 'Utbildningen har lagts till.';
+            $this->confirm = 'Jobbet har lagts till.';
             return true;
         
         } else {
 
-            $this->error = 'Det gick inte att lägga till utbildningen: ' . 
+            $this->error = 'Det gick inte att lägga till jobbet: ' . 
                 $this->conn->connect_error;
             return false; 
         }
