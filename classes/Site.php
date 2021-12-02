@@ -12,7 +12,6 @@
         public $description;
         public $url;
         public $updated;
-        public $updated_by;
         public $siteArr = [];
         public $site = [];
         public $error;
@@ -43,20 +42,17 @@
         // Lägger till webbplatser
         public function addSite(): bool {
 
-            $user = new User();
-            $this->updated_by = $user->username;
-
             $query = $this->conn->prepare('INSERT INTO site_portfolio_2
-                (site_name, site_image_path, site_description, site_url, site_updated_by)
-                VALUES (?, ?, ?, ?, ?)');
-            $query->bind_param('sssss', $this->name, $this->img_path, $this->description, 
-                $this->url, $this->updated_by);
+                (site_name, site_image_path, site_description, site_url)
+                VALUES (?, ?, ?, ?)');
+            $query->bind_param('ssss', $this->name, $this->img_path, $this->description, 
+                $this->url);
             
             $query->execute();
 
             if (!$this->conn->connect_error) {
 
-                $this->confirm = 'Jobbet har lagts till.';
+                $this->confirm = 'Webbplatsen har lagts till.';
                 return true;
             
             } else {
@@ -70,15 +66,13 @@
         // Uppdaterar webbplatser
         public function updateSite(): bool {
 
-            $user = new User();
-            $this->updated_by = $user->username;
             $this->updated = date('Y-m-d H:i:s');
 
             $query = $this->conn->prepare('UPDATE site_portfolio_2 SET site_name = ?,
-                site_image_path = ?, site_description = ?, site_url = ?, site_updated = ?,
-                site_updated_by = ? WHERE site_id = ?');
-            $query->bind_param('ssssssi', $this->name, $this->img_path, $this->description,
-                $this->url, $this->updated, $this->updated_by, $this->id);
+                site_image_path = ?, site_description = ?, site_url = ?, site_updated = ?
+                WHERE site_id = ?');
+            $query->bind_param('sssssi', $this->name, $this->img_path, $this->description,
+                $this->url, $this->updated, $this->id);
             $query->execute();
 
             if (!$this->conn->connect_error) {
@@ -90,6 +84,40 @@
 
                 $this->error = 'Det gick inte att uppdatera webbplatsen: ' . 
                     $this->conn->connect_error;
+                return false;
+            }
+        }
+
+        // Hämtar enskilda webbplatsers ID ur arrayen
+        public function getID($id): bool {
+
+            if ($this->site = $this->siteArr[$id]) {
+
+                $this->id = $this->site['site_id'];
+                return true;
+
+            } else {
+
+                $this->error = 'Det gick inte att hitta webbplatsen.';
+                return false;
+            }
+        }
+
+        // Raderar webbplatser
+        public function deleteSite() : bool {
+
+            $query = $this->conn->prepare('DELETE FROM site_portfolio_2 WHERE site_id = ?');
+            $query->bind_param('i', $this->id);
+            $query->execute();
+
+            if (!$this->conn->connect_error) {
+
+                $this->confirm = 'Webbplatsen har raderats.';
+                return true;
+
+            } else {
+
+                $this->error = 'Det gick inte att radera webbplatsen: ' . $this->conn->connect_error;
                 return false;
             }
         }

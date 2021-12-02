@@ -37,13 +37,15 @@ $site = new Site();
 $education = new Education();
 $experience = new Experience();
 
-// Lägg till ett felmeddelande om anslutningen till databasen misslyckades
+// Skickar ett felmeddelande om anslutningen till databasen misslyckades
 if($database->error) {
     $response_db = $database->error;
+    echo json_encode($response_db);
 }
 
 // Switch-sats
 switch($method) {
+
     // Om data ska läsas ut
     case 'GET':
 
@@ -55,13 +57,13 @@ switch($method) {
 
                 // Bekräftar anropet
                 http_response_code(200);
-                // Lägg till arrayen med utbildningar
+                // Lägger till arrayen med utbildningar
                 $response_education = $education->educationArr;
             
             // Om inga utbildningar finns
             } else {
 
-                // Lägg till ett felmeddelande
+                // Skickar ett felmeddelande
                 http_response_code(404);
                 $response_education = array('message' => $education->error);
             } 
@@ -71,13 +73,13 @@ switch($method) {
 
                 // Bekräftar anropet
                 http_response_code(200);
-                // Lägg till arrayen med utbildningar
+                // Lägger till arrayen med utbildningar
                 $response_job = $experience->jobArr;
                 
             // Om inga jobb finns
             } else {
                 
-                // Lägg till ett felmeddelande
+                // Skickar ett felmeddelande
                 http_response_code(404);
                 $response_job = array('message' => $experience->error);
             }
@@ -99,13 +101,13 @@ switch($method) {
 
                     // Bekräftar anropet
                     http_response_code(200);
-                    // Lägg till arrayen med webbplatser
+                    // Lägger till arrayen med webbplatser
                     $response_site = $site->siteArr;
                 
                 // Om inga webbplatser finns
                 } else {
 
-                    // Lägg till ett felmeddelande
+                    // Skickar ett felmeddelande
                     http_response_code(404);
                     $response_site = array('message' => $site->error);
                 }
@@ -114,26 +116,27 @@ switch($method) {
             } else if ($id >= 0) {
 
                 // Om det går att hitta webbplatsen
-                if ($site->getSite($id)) {
+                if ($site->getID($id)) {
 
                     // Bekräftar anropet
                     http_response_code(200);
-                    // Lägg till arrayen med webbplatser
+                    // Lägger till arrayen med webbplatser
                     $response_site = $site->site;
                 
                 // Om det inte går att hitta webbplatsen
                 } else {
 
-                    // Lägg till ett felmeddelande
+                    // Skickar ett felmeddelande
                     http_response_code(404);
                     $response_site = array('message' => $site->error);
                 }
             } 
-
+    
+            // Skickar svaret i JSON-format
             echo json_encode($response_site);
         }
 
-        break;
+    break;
 
     // Om data ska läggas till
     case 'POST':
@@ -165,8 +168,10 @@ switch($method) {
                 $response_education = array('message' => $education->error);
             }
 
+            // Skickar svaret i JSON-format
             echo json_encode($response_education);
         
+        // Om ett jobb ska läggas till
         } else if ($cat == 'experience') {
 
             // Lagrar parametervärden i objektets properties
@@ -182,7 +187,7 @@ switch($method) {
                 http_response_code(200);
                 $response_job = array('message' => $experience->confirm);
             
-                // Om utbildningen inte kunde läggas till
+            // Om jobbet inte kunde läggas till
             } else {
 
                 // Skickar ett felmeddelande
@@ -190,8 +195,10 @@ switch($method) {
                 $response_job = array('message' => $experience->error);
             }
             
+            // Skickar svaret i JSON-format
             echo json_encode($response_job);
 
+        // Om en webbplats ska läggas till
         } else if ($cat == 'site') {
 
             // Lagrar parametervärden i objektets properties
@@ -215,9 +222,11 @@ switch($method) {
                 $response_site = array('message' => $site->error);
             }
 
+            // Skickar svaret i JSON-format
             echo json_encode($response_site);
-
         }
+
+    break;
     
     // Om data ska uppdateras
     case 'PUT':
@@ -233,23 +242,34 @@ switch($method) {
             $education->school = $data->school;
             $education->start_date = $data->start_date;
             $education->end_date = $data->end_date;
-            $education->id = $id;
 
-            // Om det går att uppdatera utbildningen
-            if ($education->updateCourse()) {
+            // Om det går att hitta utbildningen
+            if ($education->getID($id)) {
 
-                // Bekräftar anropet
-                http_response_code(200);
-                $response_education = array('message' => $education->confirm);
+                // Om det går att uppdatera utbildningen
+                if ($education->updateCourse()) {
+
+                    // Bekräftar anropet
+                    http_response_code(200);
+                    $response_education = array('message' => $education->confirm);
+                
+                // Om det inte går att uppdatera utbildningen
+                } else {
+
+                    // Skickar ett felmeddelande
+                    http_response_code(503);
+                    $response_education = array('message' => $education->error);
+                }
             
-            // Om det inte går att uppdatera utbildningen
+            // Om det inte går att hitta utbildningen
             } else {
 
                 // Skickar ett felmeddelande
-                http_response_code(503);
+                http_response_code(404);
                 $response_education = array('message' => $education->error);
             }
 
+            // Skickar svaret i JSON-format
             echo json_encode($response_education);
         
         // Om ett jobb ska uppdateras
@@ -260,23 +280,34 @@ switch($method) {
             $experience->employer = $data->employer;
             $experience->start_date = $data->start_date;
             $experience->end_date = $data->end_date;
-            $experience->id = $id;
 
-            // Om jobbet har uppdaterats
-            if ($experience->updateJob()) {
+            // Om det går att hitta jobbet
+            if ($experience->getID($id)) {
 
-                // Bekräftar anropet
-                http_response_code(200);
-                $response_job = array('message' => $experience->confirm);
-            
-            // Om det inte går att uppdatera jobbet
+                // Om jobbet har uppdaterats
+                if ($experience->updateJob()) {
+
+                    // Bekräftar anropet
+                    http_response_code(200);
+                    $response_job = array('message' => $experience->confirm);
+                
+                // Om det inte går att uppdatera jobbet
+                } else {
+
+                    // Skickar ett felmeddelande
+                    http_response_code(503);
+                    $response_job = array('message' => $experience->error);
+                }
+
+            // Om det inte går att hitta jobbet
             } else {
 
                 // Skickar ett felmeddelande
-                http_response_code(503);
+                http_response_code(404);
                 $response_job = array('message' => $experience->error);
             }  
             
+            // Skickar svaret i JSON-format
             echo json_encode($response_job);
 
         // Om en webbplats ska uppdateras
@@ -287,27 +318,142 @@ switch($method) {
             $site->img_path = $data->img_path;
             $site->description = $data->description;
             $site->url = $data->url;
-            $site->id = $id;
 
-            // Om webbplatsen har uppdaterats
-            if ($site->updateSite()) {
+            // Om det går att hitta webbplatsen
+            if ($site->getID($id)) {
 
-                // Bekräftar anropet
-                http_response_code(200);
-                $response_site = array('message' => $site->confirm);
+                // Om webbplatsen har uppdaterats
+                if ($site->updateSite()) {
+
+                    // Bekräftar anropet
+                    http_response_code(200);
+                    $response_site = array('message' => $site->confirm);
+                
+                // Om det inte går att uppdatera webbplatsen
+                } else {
+
+                    // Skickar ett felmeddelande
+                    http_response_code(503);
+                    $response_site = array('message' => $site->error);
+                }
             
-            // Om det inte går att uppdatera webbplatsen
+            // Om det inte går att hitta webbplatsen
             } else {
 
                 // Skickar ett felmeddelande
-                http_response_code(503);
+                http_response_code(404);
                 $response_site = array('message' => $site->error);
             }
 
+            // Skickar svaret i JSON-format
             echo json_encode($response_site);
         }   
 
-    default:
-        # code...
-        break;
+    break;
+
+    // Om data ska raderas
+    case 'DELETE':
+
+        // Läser in all data i anropet
+        $data = json_decode(file_get_contents('php://input'));
+
+        // Om en utbildning ska raderas
+        if ($cat == 'education') {
+
+            // Om det går att hitta utbildningen
+            if ($education->getID($id)) {
+
+                // Om utbildningen har raderats
+                if ($education->deleteCourse()) {
+
+                    // Bekräftar anropet
+                    http_response_code(200);
+                    $response_education = array('message' => $education->confirm);
+                
+                // Om det inte går att radera utbildningen
+                } else {
+
+                    // Skickar ett felmeddelande
+                    http_response_code(503);
+                    $response_education = array('message' => $education->error);
+                }
+            
+            // Om det inte går att hitta utbildningen
+            } else {
+
+                // Skickar ett felmeddelande
+                http_response_code(404);
+                $response_education = array('message' => $education->error);
+
+            }
+
+            // Skickar svaret i JSON-format
+            echo json_encode($response_education);
+        
+        // Om ett jobb ska raderas
+        } else if ($cat == 'experience') {
+
+            // Om det går att hitta jobbet
+            if ($experience->getID($id)) {
+
+                // Om jobbet har raderats
+                if ($experience->deleteJob()) {
+
+                    // Bekräftar anropet
+                    http_response_code(200);
+                    $response_job = array('message' => $experience->confirm);
+
+                // Om det inte går att radera jobbet
+                } else {
+
+                    // Skickar ett felmeddelande
+                    http_response_code(503);
+                    $response_job = array('message' => $experience->error);
+                }
+
+            // Om det inte går att hitta jobbet
+            } else {
+
+                // Skickar ett felmeddelande
+                http_response_code(404);
+                $response_job = array('message' => $experience->error);
+            }
+
+            // Skickar svaret i JSON-format
+            echo json_encode($response_job);
+
+        // Om en webbplats ska raderas
+        } else if ($cat == 'site') {
+
+            // Om det går att hitta webbplatsen
+            if ($site->getID($id)) {
+
+                // Om webbplatsen har raderats
+                if ($site->deleteSite()) {
+
+                    // Bekräftar anropet
+                    http_response_code(200);
+                    $response_site = array('message' => $site->confirm);
+
+                // Om det inte går att radera webbplatsen
+                } else {
+
+                    // Skickar ett felmeddelande
+                    http_response_code(503);
+                    $response_site = array('message' => $site->error);
+                }
+
+            // Om det inte går att hitta webbplatsen    
+            } else {
+
+                // Skickar ett felmeddelande
+                http_response_code(404);
+                $response_site = array('meddelande' => $site->error);
+            }
+
+            // Skickar svaret i JSON-format
+            echo json_encode($response_site);
+        }
+
+    break;
 }

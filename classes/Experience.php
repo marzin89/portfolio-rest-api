@@ -1,7 +1,6 @@
 <?php
 // Inkluderar databasklassen
 include_once 'Database.php';
-include_once 'User.php';
 
 // Klass som hanterar jobb
 class Experience {
@@ -13,7 +12,6 @@ class Experience {
     public $start_date;
     public $end_date;
     public $updated;
-    public $updated_by;
     public $jobArr = [];
     public $job = [];
     public $error;
@@ -48,24 +46,21 @@ class Experience {
     // Lägger till jobb
     public function addJob(): bool {
 
-        $user = new User();
-        $this->updated_by = $user->username;
         $query = '';
 
         if ($this->end_date) {
 
             $query = $this->conn->prepare('INSERT INTO experience_portfolio_2
-                (job, employer, job_start_date, job_end_date, updated_by)
-                VALUES (?, ?, ?, ?, ?)');
-            $query->bind_param('sssss', $this->employment, $this->employer, $this->start_date,
-                $this->end_date, $this->updated_by);
+                (job, employer, job_start_date, job_end_date)
+                VALUES (?, ?, ?, ?)');
+            $query->bind_param('ssss', $this->employment, $this->employer, $this->start_date,
+                $this->end_date);
             
         } else {
 
             $query = $this->conn->prepare('INSERT INTO experience_portfolio_2
-                (job, employer, job_start_date, updated_by) VALUES (?, ?, ?, ?)');
-            $query->bind_param('ssss', $this->employment, $this->employer, $this->start_date,
-                $this->updated_by);
+                (job, employer, job_start_date) VALUES (?, ?, ?)');
+            $query->bind_param('sss', $this->employment, $this->employer, $this->start_date);
         }
 
         $query->execute();
@@ -86,26 +81,23 @@ class Experience {
     // Uppdaterar jobb
     public function updateJob(): bool {
 
-        $user = new User();
-        $this->updated_by = $user->username;
         $query = '';
         $this->updated = date('Y-m-d H:i:s');
 
         if ($this->end_date) {
 
             $query = $this->conn->prepare('UPDATE experience_portfolio_2 SET job = ?,
-                employer = ?, job_start_date = ?, job_end_date = ?, job_updated = ?,
-                job_updated_by = ? WHERE job_id = ?');
-            $query->bind_param('ssssssi', $this->employment, $this->employer, $this->start_date, 
-                $this->end_date, $this->updated, $this->updated_by, $this->id);
+                employer = ?, job_start_date = ?, job_end_date = ?, job_updated = ?
+                WHERE job_id = ?');
+            $query->bind_param('sssssi', $this->employment, $this->employer, $this->start_date, 
+                $this->end_date, $this->updated, $this->id);
         
         } else {
 
             $query = $this->conn->prepare('UPDATE experience_portfolio_2 SET job = ?,
-                employer = ?, job_start_date = ?, job_updated = ?, job_updated_by = ?
-                WHERE job_id = ?');
-            $query->bind_param('sssssi', $this->employment, $this->employer, $this->start_date, 
-                $this->updated, $this->updated_by, $this->id);
+                employer = ?, job_start_date = ?, job_updated = ? WHERE job_id = ?');
+            $query->bind_param('ssssi', $this->employment, $this->employer, $this->start_date, 
+                $this->updated, $this->id);
         }
 
         $query->execute();
@@ -119,6 +111,41 @@ class Experience {
 
             $this->error = 'Det gick inte att uppdatera jobbet: ' .
                 $this->conn->connect_error;
+            return false;
+        }
+    }
+
+    // Raderar jobb
+    public function deleteJob(): bool {
+
+        $query = $this->conn->prepare('DELETE FROM experience_portfolio_2 WHERE job_id = ?');
+        $query->bind_param('i', $this->id);
+        $query->execute();
+
+        if (!$this->conn->connect_error) {
+
+            $this->confirm = 'Jobbet har raderats.';
+            return true;
+
+        } else {
+
+            $this->error = 'Det gick inte att radera jobbet: ' . 
+                $this->conn->connect_error;
+            return false;
+        }
+    }
+
+    // Hämtar enskilda utbildningars ID ur arrayen
+    public function getID($id): bool {
+
+        if ($this->job = $this->jobArr[$id]) {
+
+            $this->id = $this->job['job_id'];
+            return true;
+
+        } else {
+
+            $this->error = 'Det gick inte att hitta jobbet.';
             return false;
         }
     }

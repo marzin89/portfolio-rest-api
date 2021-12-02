@@ -12,7 +12,6 @@ class Education {
     public $start_date;
     public $end_date;
     public $updated;
-    public $updated_by;
     public $educationArr = [];
     public $education = [];
     public $error;
@@ -47,25 +46,21 @@ class Education {
     // Lägger till utbildningar
     public function addCourse(): bool {
 
-        $user = new User();
-        $this->updated_by = $user->username;
         $query = '';
 
         if ($this->end_date) {
 
             $query = $this->conn->prepare('INSERT INTO education_portfolio_2
-                (course, school, education_start_date, education_end_date, 
-                education_updated_by) VALUES (?, ?, ?, ?, ?)');
-            $query->bind_param('sssss', $this->course, $this->school, $this->start_date,
-                $this->end_date, $this->updated_by);
+                (course, school, education_start_date, education_end_date) 
+                VALUES (?, ?, ?, ?)');
+            $query->bind_param('ssss', $this->course, $this->school, $this->start_date,
+                $this->end_date);
             
         } else {
 
             $query = $this->conn->prepare('INSERT INTO education_portfolio_2
-                (course, school, education_start_date, 
-                education_updated_by) VALUES (?, ?, ?, ?)');
-            $query->bind_param('ssss', $this->course, $this->school, $this->start_date,
-                $this->updated_by);
+                (course, school, education_start_date) VALUES (?, ?, ?)');
+            $query->bind_param('sss', $this->course, $this->school, $this->start_date);
         }
 
         $query->execute();
@@ -86,8 +81,6 @@ class Education {
     // Uppdaterar utbildningar
     public function updateCourse(): bool {
 
-        $user = new User();
-        $this->updated_by = $user->username;
         $query = '';
         $this->updated = date('Y-m-d H:i:s');
 
@@ -95,17 +88,16 @@ class Education {
 
             $query = $this->conn->prepare('UPDATE education_portfolio_2 SET course = ?, 
             school = ?, education_start_date = ?, education_end_date = ?, 
-            education_updated = ?, education_updated_by = ? WHERE education_id = ?');
-            $query->bind_param('ssssssi', $this->course, $this->school, $this->start_date,
-            $this->end_date, $this->updated, $this->updated_by, $this->id);
+            education_updated = ? WHERE education_id = ?');
+            $query->bind_param('sssssi', $this->course, $this->school, $this->start_date,
+            $this->end_date, $this->updated, $this->id);
         
         } else {
 
             $query = $this->conn->prepare('UPDATE education_portfolio_2 SET course = ?, 
-            school = ?, education_start_date = ?, education_updated = ?, 
-            education_updated_by = ? WHERE education_id = ?');
-            $query->bind_param('sssssi', $this->course, $this->school, $this->start_date,
-            $this->updated, $this->updated_by, $this->id);
+            school = ?, education_start_date = ?, education_updated = ? WHERE education_id = ?');
+            $query->bind_param('ssssi', $this->course, $this->school, $this->start_date,
+            $this->updated, $this->id);
         }
 
         $query->execute();
@@ -121,5 +113,40 @@ class Education {
                 $this->conn->connect_error;
             return false;
         }    
+    }
+
+    // Raderar utbildningar
+    public function deleteCourse(): bool {
+
+        $query = $this->conn->prepare('DELETE FROM education_portfolio_2 WHERE education_id = ?');
+        $query->bind_param('i', $this->id);
+        $query->execute();
+
+        if (!$this->conn->connect_error) {
+
+            $this->confirm = 'Utbildningen har raderats.';
+            return true;
+
+        } else {
+
+            $this->error = 'Det gick inte att radera utbildningen: ' . 
+                $this->conn->connect_error;
+            return false;
+        }
+    }
+
+    // Hämtar enskilda utbildningars ID ur arrayen
+    public function getID($id): bool {
+
+        if ($this->education = $this->educationArr[$id]) {
+
+            $this->id = $this->education['education_id'];
+            return true;
+        
+        } else {
+
+            $this->error = 'Det gick inte att hitta utbildningen.';
+            return false;
+        }
     }
 }
