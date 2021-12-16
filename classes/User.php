@@ -1,5 +1,4 @@
 <?php
-
 // Inkluderar databasklassen
 include_once 'Database.php';
 
@@ -20,34 +19,37 @@ class User {
     // Metoder
     // Konstruerare
     public function __construct() {
-
         $database = new Database();
         $this->conn = $database->conn;
 
-        if ( $database->error ) {
+        if ($database->error) {
             $this->error = $database->error;
         }
     }
 
     // Inloggning
-    public function login( $username, $password ): bool {
+    public function login($username, $password): bool {
+        $query = $this->conn->prepare('SELECT FROM user_portfolio_2 WHERE username = ? AND `password` = ?');
+        $query->bind_param('ss', $username, $password);
+        $result = $this->conn->query($query);
 
-        $query = $this->conn->prepare( 'SELECT FROM user_portfolio_2 WHERE username = ? AND `password` = ?' );
-        $query->bind_param( 'ss', $username, $password );
-        $result = $this->conn->query( $query );
-
-        if ( $result ) {
-            return true;
-
-        } else {
+        if (!$user = $result->fetch_assoc()) {
             $this->error = 'Fel användarnamn eller lösenord.';
             return false;
+        } else {
+            return true;
         }
     }
 
-    // Setters
-    // Användarnamn
-    public function setUsername($username) {
-        $this->username = $username;
+    // Utloggning
+    public function logout($logout): bool {
+        if ($logout) {
+            $_SESSION = [];
+            session_destroy();
+            header('Location https://studenter.miun.se/~mazi2001/writeable/dt093g/Projekt/webbplats/login.php');
+            return true;     
+        } else {
+            return false;
+        }
     }
 }
