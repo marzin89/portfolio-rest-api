@@ -46,7 +46,7 @@ class User {
         if ($logout) {
             $_SESSION = [];
             session_destroy();
-            header('Location https://studenter.miun.se/~mazi2001/writeable/dt093g/Projekt/webbplats/login.php');
+            header('Location: https://studenter.miun.se/~mazi2001/writeable/dt173g/projekt/webbplats/login.php');
             return true;     
         } else {
             return false;
