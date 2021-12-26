@@ -29,7 +29,7 @@ class Experience {
             $this->error = $database->error;
         }
 
-        $query = 'SELECT * FROM experience_portfolio_2';
+        $query = 'SELECT * FROM experience_portfolio_2 ORDER BY job_start_date DESC';
         $result = $this->conn->query($query);
 
         if($result->num_rows > 0) {

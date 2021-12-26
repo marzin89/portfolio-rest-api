@@ -29,7 +29,7 @@ class Education {
             $this->error = $database->error;
         }
 
-        $query = 'SELECT * FROM education_portfolio_2';
+        $query = 'SELECT * FROM education_portfolio_2 ORDER BY education_start_date DESC';
         $result = $this->conn->query($query);
 
         if($result->num_rows > 0) {
