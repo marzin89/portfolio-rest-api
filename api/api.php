@@ -55,16 +55,43 @@ switch($method) {
         // Om utbildningar eller jobb ska hämtas
         if ($cat == 'education' || $cat == 'experience') {
 
-            // Bekräftar anropet
-            http_response_code(200);
-            // Lägger till arrayen med utbildningar
-            $response_education = $education->educationArr;
-            // Lägger till arrayen med utbildningar
-            $response_job = $experience->jobArr;
-            // Slår samman arrayerna om utbildningar eller jobb ska hämtas
-            $response = array_merge($response_education, $response_job);
-            // Skickar svaret i JSON-format
-            echo json_encode($response);
+            // Om alla utbildningar och jobb ska hämtas
+            if ($id == '') {
+                // Bekräftar anropet
+                http_response_code(200);
+                // Lägger till arrayen med utbildningar
+                $response_education = $education->educationArr;
+                // Lägger till arrayen med utbildningar
+                $response_job = $experience->jobArr;
+                // Slår samman arrayerna om utbildningar eller jobb ska hämtas
+                $response = array_merge($response_education, $response_job);
+                // Skickar svaret i JSON-format
+                echo json_encode($response);
+            
+            // Om enskild utbildning eller jobb ska hämtas
+            } else if ($id >= 0)  {
+
+                if ($cat == 'education') {
+                    // Hämtar utbildningens ID ur arrayen
+                    $education->getID($id);
+                    // Lägger till utbildningen
+                    $response_education = $education->education;
+                    // Bekräftar anropet
+                    http_response_code(200);
+                    // Skickar svaret i JSON-format
+                    echo json_encode($response_education);
+
+                } else if ($cat == 'experience') {
+                    // Hämtar jobbets ID ur arrayen
+                    $experience->getID($id);
+                    // Lägger till jobbet
+                    $response_job = $experience->job;
+                    // Bekräftar anropet
+                    http_response_code(200);
+                    // Skickar svaret i JSON-format
+                    echo json_encode($response_job);
+                }
+            }
         
         // Om webbplatser ska hämtas
         } else if ($cat == 'site') {
