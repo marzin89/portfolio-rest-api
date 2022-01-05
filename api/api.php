@@ -287,7 +287,6 @@ switch($method) {
 
             // Lagrar parametervärden i objektets properties
             $site->name = $data->name;
-            $site->img_path = $data->img_path;
             $site->description = $data->description;
             $site->url = $data->url;
 
